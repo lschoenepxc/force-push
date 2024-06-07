@@ -13,3 +13,4 @@ The best prediction the west has ever seen.
 
 ## To-Do:
 - PCA?
+- Noise? PM bigger noise, Pressure cylinder semi-bis noise, Co2 and Nox most accurate
