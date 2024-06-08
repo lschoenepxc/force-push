@@ -40,7 +40,6 @@ def getSVRPrediction(inputData):
     df_queried = pd.DataFrame(cleaned_data[1:], columns=cleaned_data[0])
     def add_data(data, queried_data):
         # add queried data (without cost) to initial data
-        print(queried_data.keys())
         queried_data = queried_data[queried_data['costs'] == 1]
         data = pd.concat([data, queried_data.iloc[:, :13]], axis=0)
 
@@ -49,6 +48,7 @@ def getSVRPrediction(inputData):
 
     data = add_data(data, df_queried)
     data = data.reset_index().astype('Float32')
+    data = data.drop(columns=['PM 2'])
 
 
     # Teile die Daten in Features (X) und Ziel (y) auf
