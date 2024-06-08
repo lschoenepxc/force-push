@@ -4,3 +4,4 @@ ipykernel
 pandas
 scikit-learn
 matplotlib
+statsmodels
