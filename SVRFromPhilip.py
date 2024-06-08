@@ -69,7 +69,7 @@ def getSVRPrediction(inputData):
     multi_output_svr = MultiOutputRegressor(svr)
     multi_output_svr.fit(X_scaled, y_train)
 
-    X_test_scaled = scaler.fit_transform(X_test)
+    X_test_scaled = scaler.transform(X_test)
     y_pred = multi_output_svr.predict(X_test_scaled)
 
     accuracy = []
@@ -82,6 +82,6 @@ def getSVRPrediction(inputData):
 
 
     # Mache Vorhersagen auf dem Testset
-    inputData_Scaled = scaler.fit_transform(inputData)
+    inputData_Scaled = scaler.transform(inputData)
     y_pred = multi_output_svr.predict(inputData_Scaled)
     return accuracy, y_pred
