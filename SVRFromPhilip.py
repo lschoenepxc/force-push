@@ -47,6 +47,9 @@ def getSVRPrediction(inputData):
         return data
 
     data = add_data(data, df_queried)
+    # if any data is nan, print error
+    if data.isnull().values.any():
+        print("Data contains NaN values")
     data = data.reset_index().astype('Float32')
     data = data.drop(columns=['PM 2'])
 
@@ -55,16 +58,30 @@ def getSVRPrediction(inputData):
     X = data[["Engine speed", "Engine load", "Railpressure", "Air supply", "Crank angle", "Intake pressure", "Back pressure", "Intake temperature"]].values
     y = data[["NOx", "PM 1", "CO2", "Pressure cylinder"]].values
 
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
     # Standardisiere die Features
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    X_scaled = scaler.fit_transform(X_train)
 
     # Trainiere ein Support Vector Regressor (SVR)-Modell
     svr = SVR(kernel="rbf", C=200, epsilon=0.001) #beste werte waren für mich kernel="rbf" c=200 und epsilon=0.001
     multi_output_svr = MultiOutputRegressor(svr)
-    multi_output_svr.fit(X_scaled, y)
+    multi_output_svr.fit(X_scaled, y_train)
+
+    X_test_scaled = scaler.fit_transform(X_test)
+    y_pred = multi_output_svr.predict(X_test_scaled)
+
+    accuracy = []
+
+    for i in range(0,4):
+        #mape = sklearn.mean(np.abs((y_test[:,i] - y_pred[:,i])/y_test[:,i])) * 100
+        mape= mean_absolute_percentage_error(y_test[:,i], y_pred[:,i]) * 100
+        accuracy.append(100-mape)
+        #print("accuracy = " + str(100-mape))
+
 
     # Mache Vorhersagen auf dem Testset
     inputData_Scaled = scaler.fit_transform(inputData)
     y_pred = multi_output_svr.predict(inputData_Scaled)
-    return y_pred
+    return accuracy, y_pred

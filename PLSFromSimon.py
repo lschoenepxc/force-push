@@ -47,6 +47,9 @@ def getPLSPrediction(inputData):
         return data
 
     data = add_data(data, df_queried)
+    # if any data is nan, print error
+    if data.isnull().values.any():
+        print("Data contains NaN values")
     data = data.reset_index().astype('Float32')
     data = data.drop(columns=['PM 2'])
 
@@ -55,11 +58,25 @@ def getPLSPrediction(inputData):
     X = data[["Engine speed", "Engine load", "Railpressure", "Air supply", "Crank angle", "Intake pressure", "Back pressure", "Intake temperature"]].values
     y = data[["NOx", "PM 1", "CO2", "Pressure cylinder"]].values
 
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
     # PLS
     from sklearn.cross_decomposition import PLSRegression
     from sklearn.metrics import mean_squared_error
 
     pls = PLSRegression(n_components=8)
-    pls.fit(X, y)
+    pls.fit(X_train, y_train)
+
+    y_pred = pls.predict(X_test)
+
+    accuracy = []
+
+    for i in range(0,4):
+        #mape = sklearn.mean(np.abs((y_test[:,i] - y_pred[:,i])/y_test[:,i])) * 100
+        mape= mean_absolute_percentage_error(y_test[:,i], y_pred[:,i]) * 100
+        accuracy.append(100-mape)
+        #print("accuracy = " + str(100-mape))
+
+
     y_pred = pls.predict(inputData)
-    return y_pred
+    return accuracy, y_pred
