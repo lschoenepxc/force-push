@@ -1,6 +1,7 @@
 import math
 import pandas as pd
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.linear_model import Ridge, RidgeCV
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 from sklearn.multioutput import MultiOutputRegressor
@@ -34,7 +35,7 @@ def read_csv_file(file_path):
 # Beispiel: Daten aus "input.csv" einlesen
 
 
-def getSVRPrediction(inputData):
+def getRidgePrediction(inputData):
     data = pd.read_csv("initial_data.csv")
     cleaned_data = read_csv_file("querys_ForcePush.csv")
     df_queried = pd.DataFrame(cleaned_data[1:], columns=cleaned_data[0])
@@ -64,32 +65,26 @@ def getSVRPrediction(inputData):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X_train)
 
-    # Trainiere ein Support Vector Regressor (SVR)-Modell
-    # svr = SVR(kernel="rbf", C=200, epsilon=0.001) #beste werte waren für mich kernel="rbf" c=200 und epsilon=0.001
-    svr = SVR()
-    multi_output_svr = MultiOutputRegressor(svr)
-
-    # Definiere das Parametergitter
-    param_grid = {
-        'estimator__C': [0.1, 1, 10, 100],  # Beispielwerte
-        'estimator__epsilon': [0.01, 0.1, 1, 10],
-        'estimator__kernel': ['linear', 'poly', 'rbf', 'sigmoid']
-    }
-    # Initialisiere die Grid-Suche
-    grid_search = GridSearchCV(multi_output_svr, param_grid, cv=5, scoring='neg_mean_squared_error', verbose=2, n_jobs=-1)
-
-    # Passe die Grid-Suche an die Daten an
-    grid_search.fit(X_scaled, y_train)
-
-    # Ausgabe der besten Parameter und des besten Scores
-    print("Beste Parameter:", grid_search.best_params_) # Beste Parameter: {'estimator__C': 200, 'estimator__epsilon': 1, 'estimator__kernel': 'rbf'}
-    print("Bester Score:", grid_search.best_score_)
-    
-    # multi_output_svr.fit(X_scaled, y_train)
+    # Trainiere ein Ridge Modell
+    ridge = Ridge(alpha=0.1)
+    multi_output_ridge = MultiOutputRegressor(ridge)
+    multi_output_ridge.fit(X_scaled, y_train)
 
     X_test_scaled = scaler.transform(X_test)
-    # y_pred = multi_output_svr.predict(X_test_scaled)
-    y_pred = grid_search.predict(X_test_scaled)
+    y_pred = multi_output_ridge.predict(X_test_scaled)
+
+    # # Definiere den Bereich der Alpha-Werte
+    # alphas = [0.001, 0.01, 0.1, 1, 10, 100]
+
+    # # Initialisiere RidgeCV mit den Alpha-Werten
+    # ridge_cv = RidgeCV(alphas=alphas, cv=5)
+
+    # # Trainiere das Modell
+    # ridge_cv.fit(X_scaled, y_train)
+
+    # # Ermittle den optimalen Alpha-Wert
+    # optimal_alpha = ridge_cv.alpha_
+    # print("Optimaler Alpha-Wert:", optimal_alpha) # alpha = 0.1
 
     accuracy = []
 
@@ -102,6 +97,5 @@ def getSVRPrediction(inputData):
 
     # Mache Vorhersagen auf dem Testset
     inputData_Scaled = scaler.transform(inputData)
-    # y_pred = multi_output_svr.predict(inputData_Scaled)
-    y_pred = grid_search.predict(inputData_Scaled)
+    y_pred = multi_output_ridge.predict(inputData_Scaled)
     return accuracy, y_pred
