@@ -60,12 +60,14 @@ def getSVRPrediction(inputData, outputPara):
     # Teile die Daten in Features (X) und Ziel (y) auf
     X = data[["Engine speed", "Engine load", "Railpressure", "Air supply", "Crank angle", "Intake pressure", "Back pressure", "Intake temperature"]].values
     # y = data[["NOx", "PM 1", "CO2", "Pressure cylinder"]].values
+    hyperKernel = None
     if outputPara == 0:
         y = data[["NOx"]].values
     elif outputPara == 1:
         y = data[["PM 1"]].values
     elif outputPara == 2:
         y = data[["CO2"]].values
+        hyperKernel="rbf"
     elif outputPara == 3:
         y = data[["Pressure cylinder"]].values
 
@@ -98,7 +100,10 @@ def getSVRPrediction(inputData, outputPara):
 
     # Trainiere ein Support Vector Regressor (SVR)-Modell
     # SVR with best_params_
-    svr = SVR(kernel=grid_search.best_params_['estimator__kernel'], C=grid_search.best_params_['estimator__C'], epsilon=grid_search.best_params_['estimator__epsilon'])
+    if hyperKernel != None:
+        svr = SVR(kernel=hyperKernel, C=grid_search.best_params_['estimator__C'], epsilon=grid_search.best_params_['estimator__epsilon'])
+    else:
+        svr = SVR(kernel=grid_search.best_params_['estimator__kernel'], C=grid_search.best_params_['estimator__C'], epsilon=grid_search.best_params_['estimator__epsilon'])
     #svr = SVR(kernel=hyperParas[0], C=hyperParas[1], epsilon=hyperParas[2]) #beste werte waren für mich kernel="rbf" c=200 und epsilon=0.001
     
     multi_output_svr = MultiOutputRegressor(svr)
