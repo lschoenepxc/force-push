@@ -58,22 +58,22 @@ def getSVRPrediction(inputData):
 
 
     # Teile die Daten in Features (X) und Ziel (y) auf
-    X = data[["Engine speed", "Engine load", "Railpressure", "Air supply", "Crank angle", "Intake pressure", "Back pressure", "Intake temperature"]].values
+    x = data[["Engine speed", "Engine load", "Railpressure", "Air supply", "Crank angle", "Intake pressure", "Back pressure", "Intake temperature"]].values
     y = data[["NOx", "PM 1", "CO2", "Pressure cylinder"]].values
     #y = data[["PM 1"]].values
 
     # Generiere Beispieldaten
     #X_sample, y_sample = make_regression(n_samples=100, n_features=8, noise=0.2, random_state=42)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
     # Standardisiere die Features
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_train)
+    X_scaled = scaler.fit_transform(x_train)
     # X_scaled = scaler.fit_transform(X_sample)
 
     # Trainiere ein Support Vector Regressor (SVR)-Modell
-    svr = SVR(kernel="rbf", C=200, epsilon=0.01) #beste werte waren für mich kernel="rbf" c=200 und epsilon=0.001
+    svr = SVR(kernel="rbf", C=1, epsilon=0.005) #beste werte waren für mich kernel="rbf" c=200 und epsilon=0.001
     # svr = SVR(kernel='rbf', C=20.0, epsilon=0.1) # Cross-Validation:
     # svr = SVR()
 
@@ -103,11 +103,11 @@ def getSVRPrediction(inputData):
     # # Ausgabe der besten Parameter und des besten Scores
     # print("Beste Parameter:", grid_search.best_params_) # Beste Parameter: {'estimator__C': 200, 'estimator__epsilon': 1, 'estimator__kernel': 'rbf'}
     # print("Bester Score:", grid_search.best_score_)
-    
-    multi_output_svr.fit(X_scaled, y_train)
+    sample_weight = [2, 2, 1, 1, 1, 1, 1, 1]
+    multi_output_svr.fit(X_scaled, y_train, sample_weight)
 
-    X_test_scaled = scaler.transform(X_test)
-    y_pred = multi_output_svr.predict(X_test_scaled)
+    x_test_scaled = scaler.transform(x_test)
+    y_pred = multi_output_svr.predict(x_test_scaled)
     # y_pred = grid_search.predict(X_test_scaled)
 
     accuracy = []
@@ -118,10 +118,6 @@ def getSVRPrediction(inputData):
         accuracy.append(100-mape)
         print("accuracy = " + str(100-mape))
 
-    #for i in range(0,4):
-        #mape = sklearn.mean(np.abs((y_test[:,i] - y_pred[:,i])/y_test[:,i])) * 100
-    # mape= mean_absolute_percentage_error(y_test[0], y_pred[0]) * 100
-    # accuracy.append(100-mape)
 
     # Mache Vorhersagen auf dem Testset
     inputData_Scaled = scaler.transform(inputData)
