@@ -1,7 +1,7 @@
 import math
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.svm import SVR
 from sklearn.multioutput import MultiOutputRegressor
 import matplotlib.pyplot as plt
@@ -68,7 +68,21 @@ def getPolyRegPrediction(inputData):
     
     fitted_cab_model0 = LinearRegression().fit(X_train, y_train)
 
-    y_pred = fitted_cab_model0.predict(X_test)
+    #y_pred = fitted_cab_model0.predict(X_test)
+
+    print(fitted_cab_model0.score(X_test, y_test))
+
+    tra = PolynomialFeatures(3, include_bias=True)
+    xx1 = np.linspace(0,1, 5)
+    xx2 = np.linspace(9,10, 5)
+    xx3 = np.concatenate([xx1.reshape(-1,1),xx2.reshape(-1,1)], axis = 1)
+    tra = PolynomialFeatures(2, include_bias=False)
+    tra.fit_transform(xx3)
+    transformer_3 = PolynomialFeatures(3, include_bias=False)
+    new_features = transformer_3.fit_transform(X_train)
+    fitted_cab_model3 = LinearRegression().fit(new_features, y_train)
+
+    y_pred = fitted_cab_model3.predict(X_test)
 
     accuracy = []
 
@@ -79,5 +93,5 @@ def getPolyRegPrediction(inputData):
         #print("accuracy = " + str(100-mape))
 
 
-    y_pred = fitted_cab_model0.predict(inputData)
+    y_pred = fitted_cab_model3.predict(inputData)
     return accuracy, y_pred
