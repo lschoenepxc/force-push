@@ -1,15 +1,11 @@
-import math
 import pandas as pd
-from sklearn.datasets import make_regression
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 from sklearn.multioutput import MultiOutputRegressor
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+from sklearn.metrics import mean_absolute_percentage_error
 import csv
 import re
 
@@ -34,7 +30,6 @@ def read_csv_file(file_path):
 
     return cleaned_data
 
-# Beispiel: Daten aus "input.csv" einlesen
 
 
 def getSVRPrediction(inputData, outputPara):
@@ -45,8 +40,6 @@ def getSVRPrediction(inputData, outputPara):
         # add queried data (without cost) to initial data
         queried_data = queried_data[queried_data['costs'] == 1]
         data = pd.concat([data, queried_data.iloc[:, :13]], axis=0)
-
-        # data = data.append(queried_data, ignore_index=True)
         return data
 
     data = add_data(data, df_queried)
@@ -60,6 +53,7 @@ def getSVRPrediction(inputData, outputPara):
     # Teile die Daten in Features (X) und Ziel (y) auf
     X = data[["Engine speed", "Engine load", "Railpressure", "Air supply", "Crank angle", "Intake pressure", "Back pressure", "Intake temperature"]].values
     # y = data[["NOx", "PM 1", "CO2", "Pressure cylinder"]].values
+    # Force rbf kernel for CO2
     hyperKernel = None
     if outputPara == 0:
         y = data[["NOx"]].values
@@ -80,7 +74,7 @@ def getSVRPrediction(inputData, outputPara):
     # Grid-Search für Hyperparameter
     svr = SVR()
 
-    # Definiere das Parametergitter
+    # Definiere das Parametergitter der Hyperparameter, die getestet werden sollen
     param_grid = {
         'estimator__C': [0.1, 1, 10, 100, 200],
         'estimator__epsilon': [0.01, 0.1, 1, 10],
@@ -118,13 +112,14 @@ def getSVRPrediction(inputData, outputPara):
     inputData_Scaled = scaler.transform(inputData)
     y_pred = multi_output_svr.predict(inputData_Scaled)
 
-    # Wende Kreuzvalidierung an
-    scores = cross_val_score(svr, X_scaled, y_train, cv=5, scoring='neg_mean_squared_error', verbose=0)
-    # Berechne den Durchschnitt und die Standardabweichung der Scores
-    mean_score = scores.mean()
-    std_dev = scores.std()
+    # # Wende Kreuzvalidierung an
+    # scores = cross_val_score(svr, X_scaled, y_train, cv=5, scoring='neg_mean_squared_error', verbose=0)
 
-    print(f"Durchschnittlicher Score: {mean_score}")
-    print(f"Standardabweichung der Scores: {std_dev}")
+    # # Berechne den Durchschnitt und die Standardabweichung der Scores
+    # mean_score = scores.mean()
+    # std_dev = scores.std()
+
+    # print(f"Durchschnittlicher Score: {mean_score}")
+    # print(f"Standardabweichung der Scores: {std_dev}")
 
     return accuracy, y_pred
